@@ -2,7 +2,7 @@
  "id": "./",
  "name": "FightSmarter",
  "short_name": "FightSmarter",
- "description": "Temporizador de rounds, combos de kickboxing y drills de BJJ dictados por voz.",
+ "description": "Tu diario de kickboxing: lo que hiciste en clase, por voz o escrito, y vídeos de tu técnica.",
  "lang": "es",
  "start_url": "./",
  "scope": "./",
