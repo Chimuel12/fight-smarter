@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>FightSmarter</title>
+<meta name="description" content="Temporizador de rounds, combos de kickboxing y drills de BJJ dictados por voz.">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FightSmarter">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192-v1.png">
+<link rel="apple-touch-icon" href="apple-touch-icon-v1.png">
+<style>
+:root{--bg:#000;--card:#111317;--card2:#1a1d23;--line:#262a31;--fg:#f4f6f8;--muted:#8b93a0;--acc:#4C8DFF;--acc2:#2F6FEB;--rest:#30d158;--warn:#ff9f0a;--r:22px;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--fg);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif}
+body{min-height:100dvh;padding:calc(env(safe-area-inset-top) + 18px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+main{max-width:520px;margin:0 auto}
+header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+header img{width:40px;height:40px;border-radius:11px}
+h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:14px;margin-top:-2px}
+.seg{display:flex;background:var(--card);border-radius:14px;padding:4px;margin-bottom:14px}
+.seg button{flex:1;border:0;background:none;color:var(--muted);font-family:inherit;font-weight:600;font-size:15px;line-height:1;padding:11px 6px;border-radius:11px;cursor:pointer}
+.seg button.on{background:var(--card2);color:var(--fg)}
+.card{background:var(--card);border-radius:var(--r);padding:18px;margin-bottom:14px}
+.timer{text-align:center;padding:26px 18px 22px}
+.ring{position:relative;width:min(72vw,280px);aspect-ratio:1;margin:0 auto 18px}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:12;stroke-linecap:round}
+.ring .bgc{stroke:var(--card2)}
+.ring .fgc{stroke:url(#g);transition:stroke-dashoffset .25s linear}
+.ring.rest .fgc{stroke:var(--rest)}
+.ring .in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.phase{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+.ring.rest .phase{color:var(--rest)}
+.time{font-size:64px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.03em;line-height:1.05}
+.round{color:var(--muted);font-size:14px}
+.call{min-height:58px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;padding:0 8px;margin-bottom:16px;text-align:center}
+.call small{display:block;font-size:13px;font-weight:500;color:var(--muted)}
+.btns{display:flex;gap:10px}
+.btn{flex:1;border:0;border-radius:16px;padding:16px;font-family:inherit;font-weight:700;font-size:17px;line-height:1;cursor:pointer;background:var(--card2);color:var(--fg)}
+.btn.main{background:linear-gradient(135deg,#5AA2FF,#1E5BE0);color:#fff}
+.set{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.set label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);font-weight:600}
+.step{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:12px;padding:4px}
+.step button{width:34px;height:34px;border:0;border-radius:9px;background:none;color:var(--acc);font-family:inherit;font-weight:700;font-size:20px;line-height:1;cursor:pointer}
+.step b{font-size:15px;font-variant-numeric:tabular-nums;color:var(--fg)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:15px}
+.sw{position:relative;width:51px;height:31px;flex:0 0 auto}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:var(--card2);border-radius:31px;transition:.2s;cursor:pointer}
+.sw span:before{content:"";position:absolute;width:27px;height:27px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s}
+.sw input:checked+span{background:var(--acc)}
+.sw input:checked+span:before{transform:translateX(20px)}
+h2{font-size:17px;font-weight:700;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.stats b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;color:var(--muted)}
+.log{list-style:none;margin-top:12px}
+.log li{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.log li span{color:var(--muted)}
+.tech{font-size:15px}
+.tech b{display:block;font-size:18px;margin-bottom:4px}
+.tech p{color:var(--muted);font-size:14px}
+.empty{color:var(--muted);font-size:14px}
+.hint{color:var(--muted);font-size:13px;text-align:center;margin-top:16px}
+.hint a{color:var(--acc);text-decoration:none}
+body.running .hide-run{display:none}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon-192-v1.png" alt="">
+    <div><h1>FightSmarter</h1><div class="sub">Rounds, combos y drills por voz</div></div>
+  </header>
+
+  <div class="seg hide-run" role="tablist">
+    <button id="m-kick" class="on" role="tab">Kickboxing</button>
+    <button id="m-bjj" role="tab">BJJ / Grappling</button>
+  </div>
+
+  <section class="card timer">
+    <div class="ring" id="ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5AA2FF"/><stop offset="1" stop-color="#1E5BE0"/></linearGradient></defs>
+        <circle class="bgc" cx="60" cy="60" r="52"/>
+        <circle class="fgc" id="arc" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"/>
+      </svg>
+      <div class="in"><div class="phase" id="phase">Listo</div><div class="time" id="time">3:00</div><div class="round" id="round">3 rounds</div></div>
+    </div>
+    <div class="call" id="call" aria-live="polite"></div>
+    <div class="btns">
+      <button class="btn main" id="go">Empezar</button>
+      <button class="btn" id="stop" hidden>Terminar</button>
+    </div>
+  </section>
+
+  <section class="card hide-run">
+    <div class="set">
+      <label>Rounds<div class="step"><button data-k="rounds" data-d="-1">−</button><b id="v-rounds"></b><button data-k="rounds" data-d="1">+</button></div></label>
+      <label>Round<div class="step"><button data-k="work" data-d="-30">−</button><b id="v-work"></b><button data-k="work" data-d="30">+</button></div></label>
+      <label>Descanso<div class="step"><button data-k="rest" data-d="-15">−</button><b id="v-rest"></b><button data-k="rest" data-d="15">+</button></div></label>
+    </div>
+    <div class="row"><span id="callLabel">Dictar combos por voz</span><label class="sw"><input type="checkbox" id="voice" checked><span></span></label></div>
+  </section>
+
+  <section class="card hide-run">
+    <h2 id="techTitle">Combo del día</h2>
+    <div class="tech" id="tech"></div>
+  </section>
+
+  <section class="card hide-run">
+    <h2>Tu progreso</h2>
+    <div class="stats">
+      <div><b id="s-streak">0</b><span>días seguidos</span></div>
+      <div><b id="s-week">0</b><span>rounds esta semana</span></div>
+      <div><b id="s-total">0</b><span>sesiones</span></div>
+    </div>
+    <ul class="log" id="log"></ul>
+  </section>
+  <p class="hint hide-run">Instálala: en iPhone, Safari → Compartir → <b>Añadir a inicio</b>. En Android, Chrome → ⋮ → <b>Instalar app</b>.</p>
+</main>
+
+<script>
+/* ---------- content ---------- */
+const KICK = {
+  name: 'Kickboxing', work: 180, rest: 60, rounds: 3, every: 6,
+  calls: ['Jab, cross', 'Jab, cross, gancho', 'Doble jab, cross', 'Jab, cross, low kick', 'Cross, gancho, cross',
+    'Jab, low kick', 'Teep', 'Jab, cross, patada media', 'Gancho al cuerpo, gancho arriba', 'Uppercut, gancho',
+    'Esquiva y cross', 'Rodilla, rodilla', 'Jab, cross, gancho, low kick', 'Patada alta', 'Cross, low kick',
+    'Jab al cuerpo, cross arriba', 'Bloquea, patada media', 'Switch kick', 'Codo, codo', '¡Diez segundos a tope!'],
+  daily: [
+    ['Jab, cross, low kick', 'El low kick sale con la pierna de atrás justo después del cross: aprovecha la rotación de cadera.'],
+    ['Teep y entrada', 'Aleja al rival con el teep (patada frontal) y entra con jab, cross mientras recoge la pierna.'],
+    ['Gancho al cuerpo, gancho arriba', 'Baja al cuerpo doblando rodillas, no la cintura; sube con el mismo brazo a la cabeza.'],
+    ['Esquiva y contra', 'Esquiva el jab hacia fuera y contesta con cross y patada media al hígado.'],
+    ['Doble jab, cross, gancho', 'El doble jab mide la distancia; el gancho cierra la combinación con el pie adelantado.'],
+    ['Check y contra', 'Levanta la tibia para bloquear el low kick y responde con cross al instante.'],
+    ['Switch kick', 'Cambia de guardia con un paso pequeño y patea con la pierna de delante como si fuera la de atrás.'],
+  ],
+}
+const BJJ = {
+  name: 'BJJ / Grappling', work: 300, rest: 60, rounds: 5, every: 30,
+  calls: ['Desde guardia cerrada: barrida de tijera', 'Escape de montada: upa (puente)', 'Pasa la guardia: torreando',
+    'Toma la espalda y pon ganchos', 'Desde cien kilos: monta', 'Kimura desde guardia', 'Escape de cien kilos: gamba',
+    'Triángulo desde guardia', 'Derribo: double leg', 'Guardia abierta: recupera la guardia', 'Arm bar desde montada',
+    'Mata león desde la espalda', 'Barrida de gancho desde media guardia', 'Rodilla en el estómago', 'Lucha de agarres: rompe y agarra',
+    'Escape de la espalda', 'Guillotina', 'Drill: gambas a lo largo del tatami'],
+  daily: [
+    ['Upa (escape de montada)', 'Atrapa el brazo y el pie del mismo lado, puente sobre el hombro y gira hacia tu guardia.'],
+    ['Barrida de tijera', 'Agarre de cuello y manga, cadera hacia fuera, espinilla en el abdomen y corta con la pierna de abajo.'],
+    ['Kimura desde guardia cerrada', 'Cuando apoye la mano, agárrale la muñeca, siéntate, pasa tu brazo por encima y gira la cadera.'],
+    ['Pase torreando', 'Agarra el pantalón por las rodillas, empuja las piernas a un lado y camina hacia el otro.'],
+    ['Triángulo', 'Una mano dentro y otra fuera: sube la pierna por el cuello, cierra en triángulo y ajusta el ángulo.'],
+    ['Double leg', 'Baja el nivel, paso de penetración entre sus pies, agarra detrás de las rodillas y gira al lado.'],
+    ['Escape de cien kilos', 'Marco en cuello y cadera, gamba hacia fuera y mete la rodilla para recuperar la guardia.'],
+  ],
+}
+const MODES = { kick: KICK, bjj: BJJ }
+
+/* ---------- state ---------- */
+const $ = id => document.getElementById(id)
+const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
+let mode = load('fs_mode', 'kick')
+let cfg = load('fs_cfg', { kick: { rounds: 3, work: 180, rest: 60 }, bjj: { rounds: 5, work: 300, rest: 60 } })
+let log = load('fs_log', [])
+const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+
+/* ---------- sound and voice ---------- */
+let ac
+const beep = (f = 880, d = .18, n = 1) => {
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)()
+    for (let i = 0; i < n; i++) {
+      const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * (d + .08)
+      o.frequency.value = f; o.connect(g); g.connect(ac.destination)
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.5, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + d)
+      o.start(t); o.stop(t + d + .02)
+    }
+  } catch {}
+  if (navigator.vibrate) navigator.vibrate(n > 1 ? [120, 60, 120] : 80)
+}
+const speak = txt => {
+  if (!$('voice').checked || !('speechSynthesis' in window)) return
+  try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(txt.replace(/^¡|!$/g, '')); u.lang = 'es-ES'; u.rate = 1.05; speechSynthesis.speak(u) } catch {}
+}
+
+/* ---------- timer ---------- */
+let run = null, wake = null
+function render() {
+  const M = MODES[mode], c = cfg[mode]
+  $('m-kick').classList.toggle('on', mode === 'kick'); $('m-bjj').classList.toggle('on', mode === 'bjj')
+  $('v-rounds').textContent = c.rounds; $('v-work').textContent = fmt(c.work); $('v-rest').textContent = fmt(c.rest)
+  $('callLabel').textContent = mode === 'kick' ? 'Dictar combos por voz' : 'Dictar drills por voz'
+  $('techTitle').textContent = mode === 'kick' ? 'Combo del día' : 'Técnica del día'
+  const d = M.daily[Math.floor(Date.now() / 864e5) % M.daily.length]
+  $('tech').innerHTML = `<b>${d[0]}</b><p>${d[1]}</p>`
+  if (!run) { $('time').textContent = fmt(c.work); $('round').textContent = `${c.rounds} rounds · ${M.name}`; $('phase').textContent = 'Listo'; setArc(1); $('call').textContent = '' }
+  renderLog()
+}
+function setArc(f) { $('arc').style.strokeDashoffset = String(326.7 * (1 - f)) }
+async function start() {
+  const M = MODES[mode], c = { ...cfg[mode] }
+  run = { M, c, round: 1, phase: 'prep', left: 5, total: 5, next: 0, done: 0 }
+  document.body.classList.add('running'); $('go').textContent = 'Pausa'; $('stop').hidden = false
+  try { wake = await navigator.wakeLock?.request('screen') } catch {}
+  beep(660); tick(); run.iv = setInterval(tick, 1000)
+}
+function tick() {
+  const r = run
+  if (r.paused) return
+  r.left--
+  if (r.phase === 'work') {
+    r.next--
+    if (r.next <= 0 && r.left > 3) { const s = r.M.calls[Math.floor(Math.random() * r.M.calls.length)]; $('call').textContent = s; speak(s); r.next = r.M.every + Math.floor(Math.random() * 3) }
+    if (r.left === 10) { beep(1200, .08, 3) }
+  }
+  if (r.left <= 0) {
+    if (r.phase === 'prep' || r.phase === 'rest') { r.phase = 'work'; r.left = r.total = r.c.work; r.next = 2; beep(880, .5); speak(`Round ${r.round}`) }
+    else if (r.round >= r.c.rounds) { r.done = r.round; return finish(true) }
+    else { r.done = r.round; r.round++; r.phase = 'rest'; r.left = r.total = r.c.rest; beep(520, .5, 2); $('call').textContent = 'Descanso'; speak('Descanso') }
+  }
+  $('ring').classList.toggle('rest', r.phase !== 'work')
+  $('phase').textContent = r.phase === 'work' ? 'Round' : r.phase === 'rest' ? 'Descanso' : 'Prepárate'
+  $('time').textContent = fmt(Math.max(0, r.left))
+  $('round').textContent = `${r.round} de ${r.c.rounds}`
+  setArc(r.left / r.total)
+}
+function finish(complete) {
+  const r = run
+  clearInterval(r.iv)
+  const rounds = complete ? r.c.rounds : r.done
+  if (rounds > 0) { log.unshift({ at: Date.now(), mode, rounds, work: r.c.work }); log = log.slice(0, 200); save('fs_log', log) }
+  if (complete) { beep(880, .3, 3); speak('¡Buen trabajo!'); $('call').textContent = '¡Buen trabajo! 💪' } else $('call').textContent = ''
+  run = null; try { wake?.release() } catch {}
+  document.body.classList.remove('running'); $('go').textContent = 'Empezar'; $('stop').hidden = true
+  render(); if (complete) $('call').textContent = '¡Buen trabajo! 💪'
+}
+
+/* ---------- progress ---------- */
+const dayKey = t => new Date(t).toDateString()
+function renderLog() {
+  const days = new Set(log.map(x => dayKey(x.at)))
+  let streak = 0, d = new Date()
+  if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1)
+  while (days.has(d.toDateString())) { streak++; d.setDate(d.getDate() - 1) }
+  const mon = new Date(); mon.setHours(0, 0, 0, 0); mon.setDate(mon.getDate() - (mon.getDay() + 6) % 7)
+  $('s-streak').textContent = streak
+  $('s-week').textContent = log.filter(x => x.at >= +mon).reduce((a, x) => a + x.rounds, 0)
+  $('s-total').textContent = log.length
+  $('log').innerHTML = log.length ? log.slice(0, 5).map(x => `<li>${MODES[x.mode].name} · ${x.rounds} × ${fmt(x.work)}<span>${new Date(x.at).toLocaleDateString('es', { weekday: 'short', day: 'numeric', month: 'short' })}</span></li>`).join('')
+    : '<li class="empty">Termina tu primera sesión y aparecerá aquí.</li>'
+}
+
+/* ---------- controls ---------- */
+$('m-kick').onclick = () => { if (!run) { mode = 'kick'; save('fs_mode', mode); render() } }
+$('m-bjj').onclick = () => { if (!run) { mode = 'bjj'; save('fs_mode', mode); render() } }
+document.querySelectorAll('.step button').forEach(b => b.onclick = () => {
+  const k = b.dataset.k, d = +b.dataset.d, c = cfg[mode], lim = { rounds: [1, 20], work: [30, 600], rest: [0, 300] }[k]
+  c[k] = Math.min(lim[1], Math.max(lim[0], c[k] + d)); save('fs_cfg', cfg); render()
+})
+$('go').onclick = () => { if (!run) return start(); run.paused = !run.paused; $('go').textContent = run.paused ? 'Seguir' : 'Pausa'; if (run.paused) speechSynthesis?.cancel() }
+$('stop').onclick = () => run && finish(false)
+$('voice').checked = load('fs_voice', true)
+$('voice').onchange = e => save('fs_voice', e.target.checked)
+document.addEventListener('visibilitychange', async () => { if (run && document.visibilityState === 'visible') try { wake = await navigator.wakeLock?.request('screen') } catch {} })
+render()
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {})
+</script>
+</body>
+</html>
